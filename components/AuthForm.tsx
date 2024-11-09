@@ -14,32 +14,43 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
 
-const formSchema =
-  z.object(
-    {
-      username:
-        z
-          .string()
-          .min(
-            2
-          )
-          .max(
-            50
-          ),
-    }
-  );
 
 type FormType =
 
     | "sign-in"
     | "sign-up";
+
+const authFormSchema = (formType: FormType) => {
+    return z.object({
+        email: z.string().email(),
+        fullName: formType === 'sign-up' ? z.string().min(2).max(50):z.string().optional()
+    });
+};
 const AuthForm =
   ({
     type,
   }: {
     type: FormType;
   }) => {
+    const [
+      isLoading,
+      setIsLoading,
+    ] =
+      useState(
+        false
+      );
+    const [
+      errorMessage,
+      setErrorMessage,
+    ] =
+      useState(
+        ""
+      );
+      const formSchema = authFormSchema(type);
     // 1. Define your form.
     const form =
       useForm<
@@ -53,23 +64,25 @@ const AuthForm =
           ),
         defaultValues:
           {
-            username:
+            fullName:
               "",
+            email: "",
           },
       });
 
     // 2. Define a submit handler.
-    const onSubmit=async(
-      values: z.infer<
-        typeof formSchema
-      >
-    ) =>{
-      // Do something with the form values.
-      // ✅ This will be type-safe and validated.
-      console.log(
-        values
-      );
-    }
+    const onSubmit =
+      async (
+        values: z.infer<
+          typeof formSchema
+        >
+      ) => {
+        // Do something with the form values.
+        // ✅ This will be type-safe and validated.
+        console.log(
+          values
+        );
+      };
     return (
       <>
         <Form
@@ -79,41 +92,145 @@ const AuthForm =
             onSubmit={form.handleSubmit(
               onSubmit
             )}
-            className="space-y-8"
+            className="auth-form"
           >
+            <h1 className="form-title">
+              {type ===
+              "sign-in"
+                ? "Sign In"
+                : "Sign Up"}
+            </h1>
+            {type ===
+              "sign-up" && (
+              <FormField
+                control={
+                  form.control
+                }
+                name="fullName"
+                render={({
+                  field,
+                }) => (
+                  <FormItem>
+                    <div className="shad-form-item">
+                      <FormLabel className="shad-form-label">
+                        Full
+                        Name
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Enter your full name"
+                          className="shad-form-input"
+                          {...field}
+                        />
+                      </FormControl>
+                    </div>
+
+                    {/* <FormDescription>
+                      This
+                      is
+                      your
+                      public
+                      display
+                      name.
+                    </FormDescription> */}
+                    <FormMessage className="shad-form-message" />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <FormField
               control={
                 form.control
               }
-              name="username"
+              name="email"
               render={({
                 field,
               }) => (
                 <FormItem>
-                  <FormLabel>
-                    Username
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="shadcn"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    This
-                    is
-                    your
-                    public
-                    display
-                    name.
-                  </FormDescription>
-                  <FormMessage />
+                  <div className="shad-form-item">
+                    <FormLabel className="shad-form-label">
+                      Email
+                    </FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Enter your email"
+                        className="shad-form-input"
+                        {...field}
+                      />
+                    </FormControl>
+                  </div>
+
+                  {/* <FormDescription>
+                      This
+                      is
+                      your
+                      public
+                      display
+                      name.
+                    </FormDescription> */}
+                  <FormMessage className="shad-form-message" />
                 </FormItem>
               )}
             />
-            <Button type="submit">
-              Submit
+
+            <Button
+              type="submit"
+              className="form-submit-button"
+              disabled={
+                isLoading
+              }
+            >
+              {type ===
+              "sign-in"
+                ? "Sign In"
+                : "Sign Up"}
+              {isLoading && (
+                <Image
+                  src="/assets/icons/loader.svg"
+                  alt="Loading"
+                  width={
+                    24
+                  }
+                  height={
+                    24
+                  }
+                  className="ml-2 animate-spin"
+                />
+              )}
             </Button>
+            {errorMessage && (
+              <p className="error-message">
+                *
+                {
+                  errorMessage
+                }
+              </p>
+            )}
+            <div className="body-2 flex justify-center">
+              <p className="text-light-100">
+                {" "}
+                {type ===
+                "sign-in"
+                  ? "Don't have an account?"
+                  : "Already have an account?"}
+              </p>
+
+              <Link
+                href={
+                  type ===
+                  "sign-in"
+                    ? "/sign-up"
+                    : "/sign-in"
+                }
+                className="ml-1 font-medium text-brand"
+              >
+                {type ===
+                "sign-in"
+                  ? "Sign Up"
+                  : "Sign In"}
+              </Link>
+            </div>
           </form>
         </Form>
         {/* OTP varification  */}
